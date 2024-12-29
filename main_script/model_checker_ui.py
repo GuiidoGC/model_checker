@@ -1,13 +1,34 @@
 import webbrowser
 
+
 import maya.cmds as cmds
 import maya.OpenMaya as om
 from functools import partial
+import general_checks as gc
+from importlib import reload
+reload(gc)
 
 class ModelCheckerUI():
     """
     Class to create the UI for the model checker tool
     """
+
+    def module_caller(self, *args):
+        """
+        Call the module that contains the model checker functions
+
+        Args:
+            self: The class instance
+            Args: The arguments passed to the function by the UI
+        """
+        print("Running checkers...")
+
+        if cmds.ls(sl=True):
+            sel = cmds.ls(sl=True)
+        else:
+            sel = cmds.ls(type='transform')
+
+        print(gc.check_empty_groups(sel))
 
     def model_checker_tab_ui(self):
         """
@@ -32,7 +53,7 @@ class ModelCheckerUI():
         form_layout = cmds.formLayout(parent=general_frame)
         # Create the checkboxes for the general checks
         self.general_checks_checkbox = cmds.checkBoxGrp(numberOfCheckBoxes=4, 
-                                                labelArray4=["Check empty group", "Check node history", "Check unused shader", "Check unused texture"], 
+                                                labelArray4=["Check Empty Group", "Check Node History", "Check Unused Shader", "Check Unused Texture"], 
                                                 parent=form_layout, 
                                                 columnAlign=(1, 'left'), 
                                                 vertical=True,
@@ -49,7 +70,7 @@ class ModelCheckerUI():
         form_layout = cmds.formLayout(parent=naming_frame)
         # Create the checkboxes for the naming checks
         self.naming_checks_checkbox = cmds.checkBoxGrp(numberOfCheckBoxes=4, 
-                                                labelArray4=["Check namings", "Check duplicated names", "Check pasted nodes", "Check Namespace"], 
+                                                labelArray4=["Check Namings", "Check Duplicated Names", "Check Pasted Nodes", "Check Namespace"], 
                                                 parent=form_layout, 
                                                 columnAlign=(1, 'left'), 
                                                 vertical=True,
@@ -64,14 +85,25 @@ class ModelCheckerUI():
 
         form_layout = cmds.formLayout(parent=model_frame)
         # Create the checkboxes for the model checks
-        self.model_checks_checkbox = cmds.checkBoxGrp(numberOfCheckBoxes=4, 
-                                                labelArray4=["Check items freezed", "Check pivots", "Check cv's position", "Check Namespace"], 
+        self.model_checks_01_checkbox = cmds.checkBoxGrp(numberOfCheckBoxes=4, 
+                                                labelArray4=["Check Object Freezed", "Check Pivots", "Check Cv's Position", "Check N-Gons"], 
                                                 parent=form_layout, 
                                                 columnAlign=(1, 'left'), 
                                                 vertical=True,
                                                 columnWidth=[(1, 200)])
         
-        cmds.formLayout(form_layout, edit=True, attachForm=[(self.model_checks_checkbox, 'left', 20), (self.model_checks_checkbox, 'top', 5)])
+        self.model_checks_02_checkbox = cmds.checkBoxGrp(numberOfCheckBoxes=3, 
+                                                labelArray3=["Check Triangles", "Check Symmetry", "Check non-manifold geometry"], 
+                                                parent=form_layout, 
+                                                columnAlign=(1, 'left'), 
+                                                vertical=True,
+                                                columnWidth=[(1, 200)])
+
+
+
+
+        cmds.formLayout(form_layout, edit=True, attachForm=[(self.model_checks_01_checkbox, 'left', 20), (self.model_checks_01_checkbox, 'top', 5),
+                                                            (self.model_checks_02_checkbox, 'left', 20), (self.model_checks_02_checkbox, 'top', 72),])
 
         cmds.separator(parent=self.checker_tab, style='none', height=10)        
 
@@ -79,7 +111,7 @@ class ModelCheckerUI():
         output_console_label = cmds.text(label="OUTPUT CONSOLE", parent=self.checker_tab, font="boldLabelFont", height=30)
 
         # Create console output
-        text_scroll_list = cmds.textScrollList(parent=self.checker_tab, allowMultiSelection=True)
+        self.text_scroll_list = cmds.textScrollList(parent=self.checker_tab, allowMultiSelection=True)
 
         cmds.separator(parent=self.checker_tab, style='none', height=10)
 
@@ -89,9 +121,9 @@ class ModelCheckerUI():
         check_all_button = cmds.button(label="Check All", parent=final_buttons_form)
         unchecked_all_button = cmds.button(label="Uncheck All", parent=final_buttons_form)
         export_log_button = cmds.button(label="Export Log", parent=final_buttons_form)
-        run_checker_button = cmds.button(label="Run Checkers", parent=final_buttons_form)
+        run_checker_button = cmds.button(label="Run Checkers", parent=final_buttons_form, command=self.module_caller)
         select_errors_button = cmds.button(label="Select Errors", parent=final_buttons_form)
-        
+
 
         cmds.formLayout(final_buttons_form, edit=True, attachForm=[(check_all_button, 'left', 5), (check_all_button, 'bottom', 5),
                                                                 (export_log_button, 'right', 5), (export_log_button, 'bottom', 5),
@@ -169,5 +201,5 @@ class ModelCheckerUI():
         cmds.showWindow(window)
 
 
-ModelCheckerUI().create_ui()
+# ModelCheckerUI().create_ui()
 
