@@ -1,12 +1,12 @@
 import maya.cmds as cmds
 import maya.OpenMaya as om
 
-def check_empty_groups():
+def check_empty_groups(selection):
     """
     Check for empty groups in the scene
     """
     empty_groups = []
-    for node in cmds.ls(type='transform'):
+    for node in selection:
         if not cmds.listRelatives(node, children=True):
             empty_groups.append(node)
     if empty_groups:
