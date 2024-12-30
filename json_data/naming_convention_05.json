@@ -1,0 +1,23 @@
+{
+    "type_suffix": {
+        "Transforms": "GRP",
+        "Meshes": "GEO",
+        "Joints": "jnt",
+        "Locators": "loc",
+        "Clusters": "CLS",
+        "Lights": "lgt"
+    },
+    "NamingConvention": [
+        "Side",
+        [
+            "Name",
+            "Tile"
+        ],
+        "Type"
+    ],
+    "side": {
+        "Left": "L",
+        "Center": "C",
+        "Right": "R"
+    }
+}
