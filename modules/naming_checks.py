@@ -3,11 +3,37 @@ import maya.OpenMaya as om
 
 print("Imported naming_checks")
 
-def check_naming_structure():
+def check_naming_structure(export_data, items):
     """
     Check for naming structure in the scene
     """
-    items = cmds.ls(type='transform')
+
+    for key, value in export_data.items():
+            if key == "type_suffix":
+                for key, value in value.items():
+                    if key == "Transforms":
+                        transforms_type = value
+                    if key == "Meshes":
+                        meshes_type = value
+                    if key == "Joints":
+                        joints_type = value
+                    if key == "Locators":
+                        locators_type = value
+                    if key == "Clusters":
+                        clusters_type = value
+                    if key == "Lights":
+                        lights_type = value
+            if key == "NamingConvention":
+                naming_convention = value
+            if key == "side":
+                for key, value in value.items():
+                    if key == "Left":
+                        left_side = value
+                    if key == "Center":
+                        center_side = value
+                    if key == "Right":
+                        right_side = value
+
     for obj in items:
         relatives = cmds.listRelatives(obj, shapes=True)
         if relatives:
@@ -18,19 +44,49 @@ def check_naming_structure():
                     continue
         else:
             continue
+        
     bad_names = []
     bad_names_side = []
     for obj in items:
         name = obj.split("_")
-        if len(name) != 3 :
+        if len(name) != len(naming_convention):
             bad_names.append(obj)
-        else:
+
+        elif "Side" in naming_convention:
+            prefix_index = naming_convention.index("Prefix")
             pos = cmds.xform(obj, query=True, worldSpace=True, translation=True)
             x_value = pos[0]
-            if (x_value == 0 and name[0] == "C") or (x_value < 0 and name[0] == "R") or (x_value > 0 and name[0] == "L"):
-                continue
+            if (x_value == 0 and name[0] == center_side) or (x_value < 0 and name[0] == right_side) or (x_value > 0 and name[0] == left_side):
+                continue 
             else:
                 bad_names_side.append(obj)
+
+        elif "Prefix" in naming_convention:
+            prefix_index = naming_convention.index("Prefix")
+            obj_type = cmds.objectType(obj)
+
+            if obj_type == "transform":
+                if name[prefix_index] != transforms_type:
+                    bad_names.append(obj)
+            elif obj_type == "mesh":
+                if name[prefix_index] != meshes_type:
+                    bad_names.append(obj)
+            elif obj_type == "joint":
+                if name[prefix_index] != joints_type:
+                    bad_names.append(obj)
+            elif obj_type == "locator":
+                if name[prefix_index] != locators_type:
+                    bad_names.append(obj)
+            elif obj_type == "cluster":
+                if name[prefix_index] != clusters_type:
+                    bad_names.append(obj)
+            elif obj_type == "light":
+                if name[prefix_index] != lights_type:
+                    bad_names.append(obj)
+            else:
+                continue
+
+            
 
                 
 
@@ -85,4 +141,3 @@ def check_namespaces(items):
         return name_spaces
     else:
         return None
-
