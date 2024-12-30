@@ -14,12 +14,12 @@ def check_empty_groups(selection):
     else:
         return None 
     
-def check_node_hisotry():
+def check_node_hisotry(selection):
     """
     Check for nodes with history in the scene
     """
     nodes_with_history = []
-    for node in cmds.ls(type='transform'):
+    for node in selection:
         history = cmds.listHistory(node)
         for i in history:
             if i != node:
@@ -32,34 +32,38 @@ def check_node_hisotry():
     else:
         return None
     
-def check_unnused_textures():
+def check_unnused_textures(textures):
     """
     Check for unnused textures in the scene
     """
-    textures = cmds.ls(type='file')
     unnused_textures = []
     for texture in textures:
-        x = cmds.listConnections(texture, source=False, destination=True)
-        for items in x:
-            if "defaultTextureList" in items:
-                x.remove(items)
-            if not x:
-                unnused_textures.append(texture)
+        if cmds.objectType(texture) == "file":
+            x = cmds.listConnections(texture, source=False, destination=True)
+            for items in x:
+                if "defaultTextureList" in items:
+                    x.remove(items)
+                if not x:
+                    unnused_textures.append(texture)
+        else:
+            om.MGlobal_displayError(f"{texture} is not a texture")
     if unnused_textures:
         return unnused_textures
     else:
         return None
     
-def check_unnused_shaders():
+def check_unnused_shaders(shaders):
     """
     Check for unnused shaders in the scene
     """
-    shaders = cmds.ls(type='shadingEngine')
     unnused_shaders = []
     for shader in shaders:
-        connections = cmds.listConnections(shader, type='mesh')
-        if not connections:
-            unnused_shaders.append(shader)
+        if cmds.objectType(shader) == "shadingEngine":
+            connections = cmds.listConnections(shader, type='mesh')
+            if not connections:
+                unnused_shaders.append(shader)
+        else:
+            om.MGlobal_displayError(f"{shader} is not a shader")
     if unnused_shaders:
         return unnused_shaders
     else:
