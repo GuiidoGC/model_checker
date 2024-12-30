@@ -1,0 +1,23 @@
+{
+    "Prefix": {
+        "Transforms": "trn",
+        "Meshes": "mesh",
+        "Joints": "JNT",
+        "Locators": "LOC",
+        "Clusters": "cls",
+        "Lights": "lti"
+    },
+    "NamingConvention": [
+        "Side",
+        [
+            "Tile",
+            "CatClark"
+        ],
+        "Prefix"
+    ],
+    "Suffix": {
+        "Left": "Left",
+        "Center": "C",
+        "Right": "r"
+    }
+}

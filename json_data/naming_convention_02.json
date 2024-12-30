@@ -1,0 +1,23 @@
+{
+    "Prefix": {
+        "Transforms": "GRP",
+        "Meshes": "MSH",
+        "Joints": "JNT",
+        "Locators": "LOC",
+        "Clusters": "CLS",
+        "Lights": "LGT"
+    },
+    "NamingConvention": [
+        "Side",
+        [
+            "Name",
+            "Tile"
+        ],
+        "Prefix"
+    ],
+    "Suffix": {
+        "Left": "L",
+        "Center": "C",
+        "Right": "R"
+    }
+}
