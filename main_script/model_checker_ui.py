@@ -8,6 +8,7 @@ import json
 import os
 import webbrowser
 reload(gc)
+reload(nc)
 
 class ModelCheckerUI():
     """
@@ -86,33 +87,8 @@ class ModelCheckerUI():
 
     def naming_module_caller(self):
         export_data = self.get_query_export_tab()
-        print(export_data)
 
-        for key, value in export_data.items():
-            if key == "Prefix":
-                for key, value in value.items():
-                    if key == "Transforms":
-                        transforms_prefix = value
-                    if key == "Meshes":
-                        meshes_prefix = value
-                    if key == "Joints":
-                        joints_prefix = value
-                    if key == "Locators":
-                        locators_prefix = value
-                    if key == "Clusters":
-                        clusters_prefix = value
-                    if key == "Lights":
-                        lights_prefix = value
-            if key == "NamingConvention":
-                naming_convention = value
-            if key == "Suffix":
-                for key, value in value.items():
-                    if key == "Left":
-                        left_suffix = value
-                    if key == "Center":
-                        center_suffix = value
-                    if key == "Right":
-                        right_suffix = value
+       
 
         if cmds.ls(sl=True): # Check if there is a selection
             sel = cmds.ls(sl=True)
@@ -132,16 +108,18 @@ class ModelCheckerUI():
         # Run the checks
 
         if naming_checks:
-            pass
+            result = nc.check_naming_structure(sel, export_data) # Call the function to check for namings
+            if result:
+                text_print  = f"----> {result}"
+                cmds.textScrollList(self.text_scroll_list, edit=True, append=["Next line contains the nodes with wrong naming:"], font="boldLabelFont") # Add the text to the console
+                cmds.textScrollList(self.text_scroll_list, edit=True, append=[text_print])
+            else:
+                cmds.textScrollList(self.text_scroll_list, edit=True, append=["All names seems correct"], font="boldLabelFont")
+
             
         if duplicated_checks:
             result = nc.duplicated_names(sel)
-            if result:
-                text_print  = f"----> {result}"
-                cmds.textScrollList(self.text_scroll_list, edit=True, append=["Next line contains the nodes with duplicated names:"], font="boldLabelFont") # Add the text to the console
-                cmds.textScrollList(self.text_scroll_list, edit=True, append=[text_print])
-            else:
-                cmds.textScrollList(self.text_scroll_list, edit=True, append=["No nodes with duplicated names found"], font="boldLabelFont")
+           
 
         if pasted_checks:
             result = nc.check_pasted_nodes(pasted_sel)
@@ -252,7 +230,7 @@ class ModelCheckerUI():
         # Create the model checker tab
         self.checker_tab = cmds.columnLayout(adjustableColumn=True, parent=self.tabs)
 
-        cmds.separator(parent=self.checker_tab, style='none', height=10)
+        cmds.separator(parent=self.checker_tab, style='doubleDash', height=10)
 
         cmds.text(label="Select the checks you want to perform", parent=self.checker_tab)
 
@@ -401,32 +379,32 @@ class ModelCheckerUI():
         Args:
             self: The class instance
         """
-        transforms_prefix = cmds.optionMenuGrp(self.transforms_option_menu, query=True, value=True)
-        meshes_prefix = cmds.optionMenuGrp(self.meshes_option_menu, query=True, value=True)
-        joints_prefix = cmds.optionMenuGrp(self.joints_option_menu, query=True, value=True)
-        locators_prefix = cmds.optionMenuGrp(self.locators_option_menu, query=True, value=True)
-        clusters_prefix = cmds.optionMenuGrp(self.clusters_option_menu, query=True, value=True)
-        lights_prefix = cmds.optionMenuGrp(self.lights_option_menu, query=True, value=True)
-        right_suffix = cmds.optionMenuGrp(self.right_option_menu, query=True, value=True)
-        center_suffix = cmds.optionMenuGrp(self.center_option_menu, query=True, value=True)
-        left_suffix = cmds.optionMenuGrp(self.left_option_menu, query=True, value=True)
+        transforms_type_suffix = cmds.optionMenuGrp(self.transforms_option_menu, query=True, value=True)
+        meshes_type_suffix = cmds.optionMenuGrp(self.meshes_option_menu, query=True, value=True)
+        joints_type_suffix = cmds.optionMenuGrp(self.joints_option_menu, query=True, value=True)
+        locators_type_suffix = cmds.optionMenuGrp(self.locators_option_menu, query=True, value=True)
+        clusters_type_suffix = cmds.optionMenuGrp(self.clusters_option_menu, query=True, value=True)
+        lights_type_suffix = cmds.optionMenuGrp(self.lights_option_menu, query=True, value=True)
+        right_side = cmds.optionMenuGrp(self.right_option_menu, query=True, value=True)
+        center_side = cmds.optionMenuGrp(self.center_option_menu, query=True, value=True)
+        left_side = cmds.optionMenuGrp(self.left_option_menu, query=True, value=True)
         names = ["Transforms", "Meshes", "Joints", "Locators", "Clusters", "Lights"]
-        prefix_count = 0
-        for i, prefix in enumerate([transforms_prefix, meshes_prefix, joints_prefix, locators_prefix, clusters_prefix, lights_prefix]):
-            if not prefix:
-                om.MGlobal.displayError(f"No {names[i]} prefix selected")
+        type_suffix_count = 0
+        for i, type_suffix in enumerate([transforms_type_suffix, meshes_type_suffix, joints_type_suffix, locators_type_suffix, clusters_type_suffix, lights_type_suffix]):
+            if not type_suffix:
+                om.MGlobal.displayError(f"No {names[i]} type_suffix selected")
                 return
             else:
-                prefix_count += 1
+                type_suffix_count += 1
 
         names = ["Left", "Center", "Right"]
-        suffix_count = 0
-        for i, suffix in enumerate([left_suffix, center_suffix, right_suffix]):
-            if not suffix:
-                om.MGlobal.displayError(f"No {names[i]} suffix selected")
+        side_count = 0
+        for i, side in enumerate([left_side, center_side, right_side]):
+            if not side:
+                om.MGlobal.displayError(f"No {names[i]} side selected")
                 return
             else:
-                suffix_count += 1
+                side_count += 1
 
         naming_convention = cmds.textField(self.naming_text_field, query=True, text=True)
 
@@ -452,11 +430,11 @@ class ModelCheckerUI():
             om.MGlobal.displayError("No naming convention set")
             return
 
-        if parts_splited and prefix_count == 6 and suffix_count == 3:
+        if parts_splited and type_suffix_count == 6 and side_count == 3:
             export_data = {
-                "Prefix": { "Transforms": transforms_prefix, "Meshes": meshes_prefix, "Joints": joints_prefix, "Locators": locators_prefix, "Clusters": clusters_prefix, "Lights": lights_prefix },
+                "type_suffix": { "Transforms": transforms_type_suffix, "Meshes": meshes_type_suffix, "Joints": joints_type_suffix, "Locators": locators_type_suffix, "Clusters": clusters_type_suffix, "Lights": lights_type_suffix },
                 "NamingConvention": parts_splited,
-                "Suffix": { "Left": left_suffix, "Center": center_suffix, "Right": right_suffix },
+                "side": { "Left": left_side, "Center": center_side, "Right": right_side },
             }
  
         return export_data
@@ -480,7 +458,7 @@ class ModelCheckerUI():
                 config_data = json.load(json_file)
 
             for key, value in config_data.items():
-                if key == "Prefix":
+                if key == "type_suffix":
                     for key, value in value.items():
                         if key == "Transforms":
                             cmds.optionMenuGrp(self.transforms_option_menu, edit=True, value=value)
@@ -508,7 +486,7 @@ class ModelCheckerUI():
                         if i != len(value) - 1:
                             final_text += "_"
                     cmds.textField(self.naming_text_field, edit=True, text=final_text)
-                if key == "Suffix":
+                if key == "side":
                     for key, value in value.items():
                         if key == "Left":
                             cmds.optionMenuGrp(self.left_option_menu, edit=True, value=value)
@@ -594,43 +572,43 @@ class ModelCheckerUI():
 
         cmds.separator(parent=self.export_tab, style='none', height=10)
 
-        prefix_form_layout = cmds.formLayout(parent=self.export_tab)
+        type_suffix_form_layout = cmds.formLayout(parent=self.export_tab)
 
        # Create the option menus for the naming convention
 
         # ------- LEFT ------- #
 
-        self.transforms_option_menu = cmds.optionMenuGrp(parent=prefix_form_layout, label="Transforms", columnWidth2=[100, 100], columnAlign2=["left", "left"])
+        self.transforms_option_menu = cmds.optionMenuGrp(parent=type_suffix_form_layout, label="Transforms", columnWidth2=[100, 100], columnAlign2=["left", "left"])
         cmds.menuItem(label="GRP")
         cmds.menuItem(label="grp")
         cmds.menuItem(label="TRN")
         cmds.menuItem(label="trn")
 
-        self.meshes_option_menu = cmds.optionMenuGrp(parent=prefix_form_layout, label="Meshes", columnWidth2=[100, 100], columnAlign2=["left", "left"])
+        self.meshes_option_menu = cmds.optionMenuGrp(parent=type_suffix_form_layout, label="Meshes", columnWidth2=[100, 100], columnAlign2=["left", "left"])
         cmds.menuItem(label="MSH")
         cmds.menuItem(label="mesh")
         cmds.menuItem(label="GEO")
         cmds.menuItem(label="geo")
 
 
-        self.joints_option_menu = cmds.optionMenuGrp(parent=prefix_form_layout, label="Joints", columnWidth2=[100, 100], columnAlign2=["left", "left"])
+        self.joints_option_menu = cmds.optionMenuGrp(parent=type_suffix_form_layout, label="Joints", columnWidth2=[100, 100], columnAlign2=["left", "left"])
         cmds.menuItem(label="JNT")
         cmds.menuItem(label="jnt")
 
         # ------- RIGHT ------- #
 
-        self.locators_option_menu = cmds.optionMenuGrp(parent=prefix_form_layout, label="Locators", columnWidth2=[100, 100], columnAlign2=["left", "left"])
+        self.locators_option_menu = cmds.optionMenuGrp(parent=type_suffix_form_layout, label="Locators", columnWidth2=[100, 100], columnAlign2=["left", "left"])
         cmds.menuItem(label="LOC")
         cmds.menuItem(label="loc")
 
 
-        self.clusters_option_menu = cmds.optionMenuGrp(parent=prefix_form_layout, label="Clusters", columnWidth2=[100, 100], columnAlign2=["left", "left"])
+        self.clusters_option_menu = cmds.optionMenuGrp(parent=type_suffix_form_layout, label="Clusters", columnWidth2=[100, 100], columnAlign2=["left", "left"])
         cmds.menuItem(label="CLS")
         cmds.menuItem(label="cls")
         cmds.menuItem(label="CLU")
         cmds.menuItem(label="clu")
 
-        self.lights_option_menu = cmds.optionMenuGrp(parent=prefix_form_layout, label="Lights", columnWidth2=[100, 100], columnAlign2=["left", "left"])
+        self.lights_option_menu = cmds.optionMenuGrp(parent=type_suffix_form_layout, label="Lights", columnWidth2=[100, 100], columnAlign2=["left", "left"])
         cmds.menuItem(label="LGT")
         cmds.menuItem(label="lgt")
         cmds.menuItem(label="LTI")
@@ -638,25 +616,25 @@ class ModelCheckerUI():
 
         # ------- CENTER ------- #
 
-        self.left_option_menu = cmds.optionMenuGrp(parent=prefix_form_layout, label="Left", columnWidth2=[100, 100], columnAlign2=["left", "left"])
+        self.left_option_menu = cmds.optionMenuGrp(parent=type_suffix_form_layout, label="Left", columnWidth2=[100, 100], columnAlign2=["left", "left"])
         cmds.menuItem(label="L")
         cmds.menuItem(label="l")
         cmds.menuItem(label="Left")
         cmds.menuItem(label="left")
 
-        self.center_option_menu = cmds.optionMenuGrp(parent=prefix_form_layout, label="Center", columnWidth2=[100, 100], columnAlign2=["left", "left"])
+        self.center_option_menu = cmds.optionMenuGrp(parent=type_suffix_form_layout, label="Center", columnWidth2=[100, 100], columnAlign2=["left", "left"])
         cmds.menuItem(label="C")
         cmds.menuItem(label="c")
         cmds.menuItem(label="Center")
         cmds.menuItem(label="center")
 
-        self.right_option_menu = cmds.optionMenuGrp(parent=prefix_form_layout, label="Right", columnWidth2=[100, 100], columnAlign2=["left", "left"])
+        self.right_option_menu = cmds.optionMenuGrp(parent=type_suffix_form_layout, label="Right", columnWidth2=[100, 100], columnAlign2=["left", "left"])
         cmds.menuItem(label="R")
         cmds.menuItem(label="r")
         cmds.menuItem(label="Right")
         cmds.menuItem(label="right")
 
-        cmds.formLayout(prefix_form_layout, edit=True, attachForm=[
+        cmds.formLayout(type_suffix_form_layout, edit=True, attachForm=[
             (self.transforms_option_menu, 'left', 50), (self.transforms_option_menu, 'top', 25),
             (self.meshes_option_menu, 'left', 50), (self.meshes_option_menu, 'top', 55),
             (self.joints_option_menu, 'left', 50), (self.joints_option_menu, 'top', 85),
@@ -675,13 +653,13 @@ class ModelCheckerUI():
 
         # Create the text field
         naming_text = cmds.text(label="Naming convention", parent=naming_form_layout)
-        self.naming_text_field = cmds.textField("textFieldWithPopup", text="<Side>_<Name><Tile>_<Prefix>", parent=naming_form_layout, width=100)
+        self.naming_text_field = cmds.textField("textFieldWithPopup", text="<Side>_<Name><Tile>_<Type>", parent=naming_form_layout, width=100)
         
         # Attach a popup menu to the text field
         cmds.popupMenu("popupMenu", parent=self.naming_text_field)
         
         # Add menu items to the popup menu
-        keywords = ["<Side>", "<Name>", "<Tile>", "<Prefix>", "<CatClark>", "_"]
+        keywords = ["<Side>", "<Name>", "<Tile>", "<Type>", "<CatClark>", "_"]
         for keyword in keywords:
             cmds.menuItem(label=keyword, command=partial(self.insert_keyword, keyword, self.naming_text_field))
 
