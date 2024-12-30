@@ -64,15 +64,23 @@ def moveScriptToPath(source_path, target_path, *args):
     except Exception as e:
         return f"Failed to move: {e}"
 
+def call_window(*args):
+        parent_dir = os.path.abspath(__file__).replace('\drag_me.py', '')
+        sys.path.append(parent_dir)
+        import model_checker
+        from importlib import reload
+        reload(model_checker)
 
 def add_script_to_shelf():
     """
     Adds a custom button on shelf for providing the UI
     """
-    # Ensure the shelf exists
-    script = '''import model_checker'''
-    if not cmds.shelfLayout('Custom', exists=True):
-        cmds.shelfLayout('Custom', parent="ShelfLayout")
+    # Check if the menu already exists and delete it
+    if cmds.menu("ModelChecker", exists=True):
+        cmds.deleteUI("ModelChecker")
 
-    # Create the shelf button
-    cmds.shelfButton(parent='Custom', annotation='Model Checker', label='Model Checker', image='modelToolkit.png', command=script, sourceType='python')
+    # Add a new menu next to the "Help" menu
+    cmds.menu("ModelChecker", label="Model Checker", parent="MayaWindow")
+
+    # Add menu items
+    cmds.menuItem(label="Model Checker",command=call_window)
