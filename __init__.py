@@ -20,4 +20,4 @@ import main_script.model_checker_ui as mcui
 from importlib import reload
 reload(mcui)
 
-mcui.ModelCheckerUI().create_ui()
+mcui.ModelCheckerUI().create_ui(main_path)
