@@ -2,6 +2,7 @@ import maya.cmds as cmds
 import maya.OpenMaya as om
 from functools import partial
 import general_checks as gc
+import naming_checks as nc
 from importlib import reload
 import json
 import os
@@ -13,7 +14,7 @@ class ModelCheckerUI():
     Class to create the UI for the model checker tool
     """
 
-    def general_module_caller(self, *args):
+    def general_module_caller(self):
         """
         Call the module that contains the general checks functions
 
@@ -83,6 +84,85 @@ class ModelCheckerUI():
             else:
                 om.MGlobal.displayError("No textures found")
 
+    def naming_module_caller(self):
+        export_data = self.get_query_export_tab()
+        print(export_data)
+
+        for key, value in export_data.items():
+            if key == "Prefix":
+                for key, value in value.items():
+                    if key == "Transforms":
+                        transforms_prefix = value
+                    if key == "Meshes":
+                        meshes_prefix = value
+                    if key == "Joints":
+                        joints_prefix = value
+                    if key == "Locators":
+                        locators_prefix = value
+                    if key == "Clusters":
+                        clusters_prefix = value
+                    if key == "Lights":
+                        lights_prefix = value
+            if key == "NamingConvention":
+                naming_convention = value
+            if key == "Suffix":
+                for key, value in value.items():
+                    if key == "Left":
+                        left_suffix = value
+                    if key == "Center":
+                        center_suffix = value
+                    if key == "Right":
+                        right_suffix = value
+
+        if cmds.ls(sl=True): # Check if there is a selection
+            sel = cmds.ls(sl=True)
+            pasted_sel = cmds.ls(sl=True)
+            om.MGlobal.displayInfo("Running checkers on selected objects")
+        else: # If there is no selection, check all the objects
+            sel = cmds.ls(type='transform')
+            pasted_sel = cmds.ls(transforms=True, textures=True, shapes=False)
+            om.MGlobal.displayInfo("Running checkers on all objects")
+
+        # Get the checkboxes values
+        naming_checks = cmds.checkBoxGrp(self.naming_checks_checkbox, query=True, value1=True)
+        duplicated_checks = cmds.checkBoxGrp(self.naming_checks_checkbox, query=True, value2=True)
+        pasted_checks = cmds.checkBoxGrp(self.naming_checks_checkbox, query=True, value3=True)
+        namespace_checks = cmds.checkBoxGrp(self.naming_checks_checkbox, query=True, value4=True)
+
+        # Run the checks
+
+        if naming_checks:
+            pass
+            
+        if duplicated_checks:
+            result = nc.duplicated_names(sel)
+            if result:
+                text_print  = f"----> {result}"
+                cmds.textScrollList(self.text_scroll_list, edit=True, append=["Next line contains the nodes with duplicated names:"], font="boldLabelFont") # Add the text to the console
+                cmds.textScrollList(self.text_scroll_list, edit=True, append=[text_print])
+            else:
+                cmds.textScrollList(self.text_scroll_list, edit=True, append=["No nodes with duplicated names found"], font="boldLabelFont")
+
+        if pasted_checks:
+            result = nc.check_pasted_nodes(pasted_sel)
+            if result:
+                text_print  = f"----> {result}"
+                cmds.textScrollList(self.text_scroll_list, edit=True, append=["Next line contains the pasted nodes:"], font="boldLabelFont") # Add the text to the console
+                cmds.textScrollList(self.text_scroll_list, edit=True, append=[text_print])
+            else:
+                cmds.textScrollList(self.text_scroll_list, edit=True, append=["No pasted nodes found"], font="boldLabelFont")
+
+        if namespace_checks:
+            result = nc.check_namespaces(pasted_sel)
+            if result:
+                text_print  = f"----> {result}"
+                cmds.textScrollList(self.text_scroll_list, edit=True, append=["Next line contains the nodes with namespaces:"], font="boldLabelFont") # Add the text to the console
+                cmds.textScrollList(self.text_scroll_list, edit=True, append=[text_print])
+            else:
+                cmds.textScrollList(self.text_scroll_list, edit=True, append=["No nodes with namespace found"], font="boldLabelFont")
+
+        
+
     def query_console(self, *args):
         """
         Query the console output
@@ -110,6 +190,8 @@ class ModelCheckerUI():
 
         # Call the general checks module
         self.general_module_caller()
+
+        self.naming_module_caller()
 
     def clear_console(self, *args):
         """
@@ -263,13 +345,61 @@ class ModelCheckerUI():
                                                                 (clear_console, 'right', 170), (clear_console, 'bottom', 5),
                                                                 ])
 
-    def get_query_export_tab(self, *args):
+    def export_json_button(self, *args):
+        """
+        Export the JSON file
+
+        Args:
+            self: The class instance
+            Args: The arguments passed to the function by the UI
+        """
+
+
+        export_data = self.get_query_export_tab()
+
+        # Export the data to a JSON file
+        radio_query = cmds.radioButtonGrp(self.export_checkBox, query=True, select=True)
+
+        if radio_query == 1:
+            json_path = os.path.join(self.default_path, "json_data")
+            base_file_path = os.path.join(self.default_path, "json_data/naming_convention_01.json")
+            counter = 1
+            while os.path.exists(base_file_path):
+                base_file_path = os.path.join(json_path, f"naming_convention_{str(counter).zfill(2)}.json")
+                counter += 1
+            file_path = base_file_path
+            
+        else:
+            file_path = cmds.fileDialog2(fileFilter="JSON Files (*.json)", dialogStyle=2, fileMode=0)[0]
+
+        if file_path:
+            try:
+                with open(file_path, 'w') as json_file: # Open the JSON file
+                    json.dump(export_data, json_file, indent=4)
+
+
+                om.MGlobal.displayInfo(f"Exported configuration to {file_path}")
+            except PermissionError:
+                om.MGlobal.displayError(f"Permission denied: {file_path}")
+                new_file_path = cmds.fileDialog2(fileFilter="JSON Files (*.json)", dialogStyle=2, fileMode=0)[0]
+                if new_file_path:
+                    with open(new_file_path, 'w') as json_file:
+                        json.dump(export_data, json_file, indent=4)
+                    om.MGlobal.displayInfo(f"Exported configuration to {new_file_path}")
+                else:
+                    om.MGlobal.displayError("Export cancelled")
+        else:
+            om.MGlobal.displayError("Export cancelled")
+
+        
+
+
+    def get_query_export_tab(self):
         """
         Get the query from the export tab
 
         Args:
             self: The class instance
-            Args: The arguments passed to the function by the UI
         """
         transforms_prefix = cmds.optionMenuGrp(self.transforms_option_menu, query=True, value=True)
         meshes_prefix = cmds.optionMenuGrp(self.meshes_option_menu, query=True, value=True)
@@ -328,45 +458,8 @@ class ModelCheckerUI():
                 "NamingConvention": parts_splited,
                 "Suffix": { "Left": left_suffix, "Center": center_suffix, "Right": right_suffix },
             }
-        
-        # Export the data to a JSON file
-        # file_path = cmds.fileDialog2(fileFilter="JSON Files (*.json)", dialogStyle=2, fileMode=0)
-        radio_query = cmds.radioButtonGrp(self.export_checkBox, query=True, select=True)
-
-        if radio_query == 1:
-            json_path = os.path.join(self.default_path, "json_data")
-            base_file_path = os.path.join(self.default_path, "json_data/naming_convention.json")
-            counter = 1
-            while os.path.exists(base_file_path):
-                base_file_path = os.path.join(json_path, f"naming_convention_{str(counter).zfill(2)}.json")
-                counter += 1
-            file_path = base_file_path
-            
-        else:
-            file_path = cmds.fileDialog2(fileFilter="JSON Files (*.json)", dialogStyle=2, fileMode=0)
-
-        print(file_path)
-
-        if file_path:
-            try:
-                with open(file_path[0], 'w') as json_file:
-                    json.dump(export_data, json_file, indent=4)
-                om.MGlobal.displayInfo(f"Exported configuration to {file_path[0]}")
-            except PermissionError:
-                om.MGlobal.displayError(f"Permission denied: {file_path[0]}")
-                new_file_path = cmds.fileDialog2(fileFilter="JSON Files (*.json)", dialogStyle=2, fileMode=0)
-                if new_file_path:
-                    with open(new_file_path[0], 'w') as json_file:
-                        json.dump(export_data, json_file, indent=4)
-                    om.MGlobal.displayInfo(f"Exported configuration to {new_file_path[0]}")
-                else:
-                    om.MGlobal.displayError("Export cancelled")
-        else:
-            om.MGlobal.displayError("Export cancelled")
-
-        
-
-
+ 
+        return export_data
 
     def load_config(self, *args):
         """
@@ -379,14 +472,61 @@ class ModelCheckerUI():
 
         # Load the config file
         text_query = cmds.textField(self.text_field, query=True, text=True)
-        print(text_query)
 
         if text_query:
             self.custom_config = text_query
+
+            with open(self.custom_config, 'r') as json_file:
+                config_data = json.load(json_file)
+
+            for key, value in config_data.items():
+                if key == "Prefix":
+                    for key, value in value.items():
+                        if key == "Transforms":
+                            cmds.optionMenuGrp(self.transforms_option_menu, edit=True, value=value)
+                        if key == "Meshes":
+                            cmds.optionMenuGrp(self.meshes_option_menu, edit=True, value=value)
+                        if key == "Joints":
+                            cmds.optionMenuGrp(self.joints_option_menu, edit=True, value=value)
+                        if key == "Locators":
+                            cmds.optionMenuGrp(self.locators_option_menu, edit=True, value=value)
+                        if key == "Clusters":
+                            cmds.optionMenuGrp(self.clusters_option_menu, edit=True, value=value)
+                        if key == "Lights":
+                            cmds.optionMenuGrp(self.lights_option_menu, edit=True, value=value)
+                if key == "NamingConvention":
+                    final_text = ""
+                    for i, items in enumerate(value):
+                        if isinstance(items, str):
+                            renamed_item = f"<{items}>"
+                            final_text += renamed_item
+                        else:
+
+                            for item in items:
+                                renamed_item = f"<{item}>"
+                                final_text += renamed_item
+                        if i != len(value) - 1:
+                            final_text += "_"
+                    cmds.textField(self.naming_text_field, edit=True, text=final_text)
+                if key == "Suffix":
+                    for key, value in value.items():
+                        if key == "Left":
+                            cmds.optionMenuGrp(self.left_option_menu, edit=True, value=value)
+                        if key == "Center":
+                            cmds.optionMenuGrp(self.center_option_menu, edit=True, value=value)
+                        if key == "Right":
+                            cmds.optionMenuGrp(self.right_option_menu, edit=True, value=value)
+
+
+
             om.MGlobal.displayInfo(f"Config file loaded: {text_query}")
+
 
         else:
             om.MGlobal.displayError("No file selected")
+
+        
+        
 
     def file_dialog(self, *args):
         """
@@ -432,8 +572,13 @@ class ModelCheckerUI():
 
         path_form_layout = cmds.formLayout(parent=self.export_tab)   
 
+
+        list_json_files = cmds.getFileList(folder=os.path.join(self.default_path, "json_data"), filespec="*.json")
+        list_json_files.sort(reverse=True)
+        highest_json = os.path.join(self.default_path, "json_data", list_json_files[0])
+
         folder_button = cmds.iconTextButton("folder_button", st="iconOnly", h=20, backgroundColor=(0.3, 0.3, 0.3), image=":/folder-open.png", ebg=True, parent = path_form_layout)
-        self.text_field = cmds.textField("text_field",placeholderText="Set path of json file", h=20, w=500, bgc=(0.3, 0.3, 0.3), parent = path_form_layout, )
+        self.text_field = cmds.textField("text_field",text=highest_json, h=20, w=500, bgc=(0.3, 0.3, 0.3), parent = path_form_layout, )
         load_button = cmds.button("load_button", label="Load Config", parent=path_form_layout, command=self.load_config)
 
         cmds.iconTextButton(folder_button, edit=True, command=self.file_dialog)
@@ -530,7 +675,7 @@ class ModelCheckerUI():
 
         # Create the text field
         naming_text = cmds.text(label="Naming convention", parent=naming_form_layout)
-        self.naming_text_field = cmds.textField("textFieldWithPopup", placeholderText="Click here for keywords", parent=naming_form_layout, width=100)
+        self.naming_text_field = cmds.textField("textFieldWithPopup", text="<Side>_<Name><Tile>_<Prefix>", parent=naming_form_layout, width=100)
         
         # Attach a popup menu to the text field
         cmds.popupMenu("popupMenu", parent=self.naming_text_field)
@@ -550,7 +695,7 @@ class ModelCheckerUI():
 
         export_form_layout = cmds.formLayout(parent=self.export_tab)
         self.export_checkBox = cmds.radioButtonGrp(numberOfRadioButtons=2, labelArray2=["Default Path", "Custom Path"], parent=export_form_layout, columnAlign=(1, 'left'), select=1, vertical=True)
-        export_button = cmds.button(label="Export JSON", parent=export_form_layout, command=self.get_query_export_tab)
+        export_button = cmds.button(label="Export JSON", parent=export_form_layout, command=self.export_json_button)
 
         cmds.formLayout(export_form_layout, edit=True, attachForm=[
             (self.export_checkBox, 'left', 50), (self.export_checkBox, 'top', 5),
