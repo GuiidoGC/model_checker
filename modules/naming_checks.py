@@ -3,11 +3,10 @@ import maya.OpenMaya as om
 
 print("Imported naming_checks")
 
-def check_naming_structure(export_data, items):
+def check_naming_structure(items, export_data):
     """
     Check for naming structure in the scene
     """
-
     for key, value in export_data.items():
             if key == "type_suffix":
                 for key, value in value.items():
@@ -34,64 +33,71 @@ def check_naming_structure(export_data, items):
                     if key == "Right":
                         right_side = value
 
+    for i, part in enumerate(naming_convention):
+        if "Side" in part:
+            side_index = i + 1
+        elif "Type" in part:
+            type_index = i + 1
+
+    final_items = []
     for obj in items:
         relatives = cmds.listRelatives(obj, shapes=True)
         if relatives:
             for relative in relatives:
-                if cmds.objectType(relative) == "camera":
-                    items.remove(obj)
+                if cmds.objectType(relative) != "camera":
+                    final_items.append(obj)
                 else:    
                     continue
         else:
-            continue
-        
+            final_items.append(obj)
+
     bad_names = []
-    bad_names_side = []
-    for obj in items:
+
+    for obj in final_items:
         name = obj.split("_")
         if len(name) != len(naming_convention):
             bad_names.append(obj)
+            continue
 
-        elif "Side" in naming_convention:
-            prefix_index = naming_convention.index("Prefix")
-            pos = cmds.xform(obj, query=True, worldSpace=True, translation=True)
-            x_value = pos[0]
-            if (x_value == 0 and name[0] == center_side) or (x_value < 0 and name[0] == right_side) or (x_value > 0 and name[0] == left_side):
-                continue 
-            else:
-                bad_names_side.append(obj)
-
-        elif "Prefix" in naming_convention:
-            prefix_index = naming_convention.index("Prefix")
-            obj_type = cmds.objectType(obj)
-
-            if obj_type == "transform":
-                if name[prefix_index] != transforms_type:
-                    bad_names.append(obj)
-            elif obj_type == "mesh":
-                if name[prefix_index] != meshes_type:
-                    bad_names.append(obj)
-            elif obj_type == "joint":
-                if name[prefix_index] != joints_type:
-                    bad_names.append(obj)
-            elif obj_type == "locator":
-                if name[prefix_index] != locators_type:
-                    bad_names.append(obj)
-            elif obj_type == "cluster":
-                if name[prefix_index] != clusters_type:
-                    bad_names.append(obj)
-            elif obj_type == "light":
-                if name[prefix_index] != lights_type:
-                    bad_names.append(obj)
-            else:
+        
+        if side_index:
+            print("Side index")
+            pos = cmds.xform(obj, q=True, worldSpace=True, translation=True)
+            side = center_side if pos[0] == 0 else (right_side if pos[0] > 0 else left_side)
+            
+            if not side in name[side_index-1]:
+                bad_names.append(obj)
                 continue
 
-            
-
-                
-
+        if type_index:
+            print("Prefix index")
+            obj_type = cmds.objectType(obj)
+            if obj_type == "transform":
+                if not  transforms_type in name[type_index-1]:
+                    bad_names.append(obj)
+                    continue
+            elif obj_type == "mesh":
+                if not meshes_type in name[type_index-1]:
+                    bad_names.append(obj)
+                    continue
+            elif obj_type == "joint":
+                if not joints_type in name[type_index-1]:
+                    bad_names.append(obj)
+                    continue
+            elif obj_type == "locator":
+                if not locators_type in name[type_index-1]:
+                    bad_names.append(obj)
+                    continue
+            elif obj_type == "cluster":
+                if not clusters_type in name[type_index-1]:
+                    bad_names.append(obj)
+                    continue
+            elif obj_type == "light":
+                if not lights_type in name[type_index-1]:
+                    bad_names.append(obj)
+                    continue
     
-    return bad_names_side, bad_names
+    return bad_names
 
 def duplicated_names(items):
     """
