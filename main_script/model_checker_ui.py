@@ -14,7 +14,66 @@ class ModelCheckerUI():
     """
     Class to create the UI for the model checker tool
     """
+    def select_errors(self, *args):
+        """
+        Select the errors in the scene
 
+        Args:
+            self: The class instance
+            Args: The arguments passed to the function by the UI
+        """
+
+        # Select the errors in the scene
+        query = cmds.textScrollList(self.text_scroll_list, query=True, allItems=True)
+
+        if query:
+            select_items = []
+            for index, item in enumerate(query):
+                if index % 2 != 0 and index != 0:
+                    
+                    item = item.split("----> ")[1]
+                    item = item.split(",")
+                    for i in item:
+                        renamed = i.replace("['", "").replace("']", "").replace("'", "")
+                        if renamed not in select_items:
+                            select_items.append(renamed)
+                        else:
+                            continue
+                    
+            print(select_items)
+            cmds.select(select_items, add=True)
+            om.MGlobal.displayInfo("Errors selected")
+        else:
+            om.MGlobal.displayError("No errors to select")
+
+    def export_log(self, *args):
+        """
+        Export the log file
+
+        Args:
+            self: The class instance
+            Args: The arguments passed to the function by the UI
+        """
+
+        # Export the log file
+        query = cmds.textScrollList(self.text_scroll_list, query=True, allItems=True)
+
+        if query:
+            log_dir = os.path.join(self.default_path, "logs")
+            base_file_path = os.path.join(self.default_path, "logs/model_checker_log_001.json")
+            counter = 1
+            while os.path.exists(base_file_path):
+                base_file_path = os.path.join(log_dir, f"model_checker_log_{str(counter).zfill(2)}.json")
+                counter += 1
+            file_path = base_file_path
+
+            with open(file_path, 'w') as json_file:
+                json.dump(query, json_file, indent=4)
+
+            om.MGlobal.displayInfo(f"Exported log to {file_path}")
+        else:
+            om.MGlobal.displayError("No log to export")
+       
     def general_module_caller(self):
         """
         Call the module that contains the general checks functions
@@ -138,8 +197,6 @@ class ModelCheckerUI():
                 cmds.textScrollList(self.text_scroll_list, edit=True, append=[text_print])
             else:
                 cmds.textScrollList(self.text_scroll_list, edit=True, append=["No nodes with namespace found"], font="boldLabelFont")
-
-        
 
     def query_console(self, *args):
         """
@@ -309,9 +366,9 @@ class ModelCheckerUI():
         # Create the buttons for the model checker tab
         check_all_button = cmds.button(label="Check All", parent=final_buttons_form, command=self.check_all_action)
         unchecked_all_button = cmds.button(label="Uncheck All", parent=final_buttons_form, command=self.uncheck_all_action)
-        export_log_button = cmds.button(label="Export Log", parent=final_buttons_form)
+        export_log_button = cmds.button(label="Export Log", parent=final_buttons_form, command=self.export_log) 
         run_checker_button = cmds.button(label="Run Checkers", parent=final_buttons_form, command=self.module_caller)
-        select_errors_button = cmds.button(label="Select Errors", parent=final_buttons_form)
+        select_errors_button = cmds.button(label="Select Errors", parent=final_buttons_form, command=self.select_errors)
         clear_console = cmds.button(label="Clear console", parent=final_buttons_form, command=self.clear_console)
 
 
@@ -369,9 +426,6 @@ class ModelCheckerUI():
         else:
             om.MGlobal.displayError("Export cancelled")
 
-        
-
-
     def get_query_export_tab(self):
         """
         Get the query from the export tab
@@ -415,10 +469,10 @@ class ModelCheckerUI():
                 om.MGlobal.displayError("Naming convention is too long, decrease the separators")
 
             else:
-                temp_split = []
                 for part in splited_naming_convention:
                     if "><" in part:
                         part_splited = part.split("><")
+                        temp_split = []
                         for i in part_splited:
                             part_splited_renamed = i.replace("<", "").replace(">", "")
                             temp_split.append(part_splited_renamed)
@@ -436,7 +490,6 @@ class ModelCheckerUI():
                 "NamingConvention": parts_splited,
                 "side": { "Left": left_side, "Center": center_side, "Right": right_side },
             }
- 
         return export_data
 
     def load_config(self, *args):
@@ -503,9 +556,6 @@ class ModelCheckerUI():
         else:
             om.MGlobal.displayError("No file selected")
 
-        
-        
-
     def file_dialog(self, *args):
         """
         Open a file dialog
@@ -529,8 +579,6 @@ class ModelCheckerUI():
         # Update the text field with the keyword appended
         new_text = current_text + keyword
         cmds.textField(naming_text_field, edit=True, text=new_text)
-
-
 
     def export_tab_ui(self):
         """
