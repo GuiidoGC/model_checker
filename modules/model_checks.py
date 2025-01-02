@@ -92,6 +92,7 @@ def check_non_manifold(sel):
 
     Args:
     """
+    print(sel)
     non_manifold = []
     for obj in sel:
         non_manifold_faces = cmds.polyInfo(obj, nonManifoldEdges=True)
@@ -128,4 +129,4 @@ def check_zero_cv_positions(sel):
 
 
 sel = cmds.ls(sl=True)
-print(check_zero_cv_positions(sel))
+print(check_non_manifold(sel))
