@@ -5,8 +5,10 @@ import sys
 import os
 import shutil
 import maya.cmds as cmds
+import maya.OpenMaya as om
+from functools import partial
 
-
+print("hola")
 
 def onMayaDroppedPythonFile(*args):
     """
@@ -14,18 +16,52 @@ def onMayaDroppedPythonFile(*args):
     The name of this function is what Maya expects/uses as entry point, so it cannot be changed
     """
     path = findScriptPath()
-    scripts_path = findMayaScriptPath()
+    scripts_path, scripts_folder = findMayaScriptPath()
     result = moveScriptToPath(path, scripts_path)
+    update_user_setup(scripts_folder)
     add_script_to_shelf()
-    # print(result)
+
 
     # Initial Feedback
     print("_"*40)
     print("Initializing Drag-and-Drop Setup...")
-    # print(result)
 
-    print(path)
-    print(scripts_path)
+
+def update_user_setup(scripts_path):
+    user_setup_name = "userSetup.py"
+    
+    code_to_add = """
+print("Dentro")
+if cmds.menu("ModelChecker", exists=True):
+    cmds.deleteUI("ModelChecker")
+
+cmds.menu("ModelChecker", label="Model Checker", parent="MayaWindow")
+cmds.menuItem(label="Model Checker", command=partial(import model_checker))
+
+"""
+
+    files = os.listdir(scripts_path)
+    setup = []
+    for file in files:
+        if file == user_setup_name:
+            setup.append(file)
+    
+    if setup:
+        print(len(setup))
+        if len(setup) == 1:
+            user_setup_path = os.path.join(scripts_path,user_setup_name)
+            print(user_setup_path)
+            with open(user_setup_path, 'a') as file:
+                file.write(code_to_add)
+            om.MGlobal.displayInfo("Code added to userSetup.py")
+        else:
+            print(setup)
+            om.MGlobal.displayError("More than one userSetup.py, skipping!")
+            return
+            
+
+
+
 
 def findScriptPath(*args):
     """
@@ -48,9 +84,10 @@ def findMayaScriptPath(*args):
         if f"Documents/maya/{version}/scripts" in enviroments:
             final_path = enviroments
 
+    scripts_path = final_path
     final_path = os.path.join(final_path, 'model_checker')
 
-    return final_path
+    return final_path, scripts_path
 
 
 def moveScriptToPath(source_path, target_path, *args):
@@ -65,11 +102,8 @@ def moveScriptToPath(source_path, target_path, *args):
         return f"Failed to move: {e}"
 
 def call_window(*args):
-        parent_dir = os.path.abspath(__file__).replace('\drag_me.py', '')
-        sys.path.append(parent_dir)
         import model_checker
-        from importlib import reload
-        reload(model_checker)
+
 
 def add_script_to_shelf():
     """
@@ -84,3 +118,4 @@ def add_script_to_shelf():
 
     # Add menu items
     cmds.menuItem(label="Model Checker",command=call_window)
+onMayaDroppedPythonFile()
