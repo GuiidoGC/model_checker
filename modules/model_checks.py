@@ -77,7 +77,6 @@ def check_non_manifold(sel):
 
     Args:
     """
-    print(sel)
     non_manifold = []
     for obj in sel:
         non_manifold_faces = cmds.polyInfo(obj, nonManifoldEdges=True)
