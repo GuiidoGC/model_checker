@@ -63,7 +63,7 @@ def check_ngons(sel):
         faces = cmds.polyEvaluate(obj, face=True)
         for i in range(faces):
             vertices = cmds.polyInfo(f"{obj}.f[{i}]", faceToVertex=True)
-            vertices = vertices[0].split("    ")
+            vertices = vertices[0].split()
             if len(vertices) > 6:
                 ngons.append(f"{obj}.f[{i}]")
             else:
