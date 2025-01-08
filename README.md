@@ -35,22 +35,20 @@ To install Model Checker, follow these steps:
 3. Extract the contents of the downloaded `.zip` file.
 4. Move all model-checker folder into your maya scripts folder or custom script folder
 
+## Getting Started
+
+### Usage
+After installing the model checker on Maya, you will see a "Model Checker" button at the top of the interface. Click this button to access the user interface (UI).
+### MAIN PAGE
+This section provides a menu where you can select which checks to perform. All results will be printed in the console. Additionally, there will be an option to select specific error nodes.
+### CONFIG PAGE
+Here you could add the configurations for your checks naming, like naming prefix and suffix, and naming structure. You also would be able to load older config setups, and make it a faster approach to the settings
+
 ## License
 This project is licensed under the Apache 2.0 License. For more information, see the [LICENSE](LICENSE) file.
 
 ## Contact
 For any questions, feedback, or support, please contact us at [guidogoca@gmail.com](mailto:guidogoca@gmail.com).
-
-## Getting Started
-
-### Usage
-After installing the model checker on Maya, you will see a "Model Checker" button at the top of the interface. Click this button to access the user interface (UI).
-### Interface
-#### MAIN PAGE
-This section provides a menu where you can select which checks to perform. All results will be printed in the console. Additionally, there will be an option to select specific error nodes.
-### CONFIG PAGE
-Here you could add the configurations for your checks naming, like naming prefix and suffix, and naming structure. You also would be able to load older config setups, and make it a faster approach to the settings
-
 
 ## Acknowledgements
 We would like to extend our gratitude to all the contributors and the open-source community for their invaluable support.
