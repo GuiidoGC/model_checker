@@ -60,14 +60,15 @@ def check_ngons(sel):
     """
     ngons = []
     for obj in sel:
-        faces = cmds.polyEvaluate(obj, face=True)
-        for i in range(faces):
-            vertices = cmds.polyInfo(f"{obj}.f[{i}]", faceToVertex=True)
-            vertices = vertices[0].split()
-            if len(vertices) > 6:
-                ngons.append(f"{obj}.f[{i}]")
-            else:
-                continue
+        if cmds.nodeType(obj) == "mesh":
+            faces = cmds.polyEvaluate(obj, face=True)
+            for i in range(faces):
+                vertices = cmds.polyInfo(f"{obj}.f[{i}]", faceToVertex=True)
+                vertices = vertices[0].split()
+                if len(vertices) > 6:
+                    ngons.append(f"{obj}.f[{i}]")
+                else:
+                    continue
     if ngons:
         return ngons
 
