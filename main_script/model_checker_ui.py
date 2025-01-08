@@ -237,12 +237,9 @@ class ModelCheckerUI():
         else:
             return
 
-
-        print(object_freezed_checks, pivots_checks, ngons_checks, non_manifold_checks)
         # Run the checks
         if object_freezed_checks:
             result = mc.check_object_unfreezed(sel)
-            print(result)
             if result:
                 text_print  = f"----> {result}"
                 cmds.textScrollList(self.text_scroll_list, edit=True, append=["Next line contains the freezed objects:"], font="boldLabelFont")
@@ -252,7 +249,6 @@ class ModelCheckerUI():
         
         if pivots_checks:
             result = mc.check_pivots(sel)
-            print(result)
             if result:
                 text_print  = f"----> {result}"
                 cmds.textScrollList(self.text_scroll_list, edit=True, append=["Next line contains the objects with non-centered pivots:"], font="boldLabelFont")
@@ -262,7 +258,6 @@ class ModelCheckerUI():
         
         if ngons_checks:
             result = mc.check_ngons(sel)
-            print(result)
             if result:
                 text_print  = f"----> {result}"
                 cmds.textScrollList(self.text_scroll_list, edit=True, append=["Next line contains the objects with n-gons:"], font="boldLabelFont")
@@ -272,7 +267,6 @@ class ModelCheckerUI():
         
         if non_manifold_checks:
             result = mc.check_non_manifold(sel)
-            print(result)
             if result:
                 text_print  = f"----> {result}"
                 cmds.textScrollList(self.text_scroll_list, edit=True, append=["Next line contains the objects with non-manifold geometry:"], font="boldLabelFont")
@@ -293,7 +287,6 @@ class ModelCheckerUI():
 
         # Query the console output
         console_output = cmds.textScrollList(self.text_scroll_list, query=True, allItems=True)
-        print(console_output)
 
     def module_caller(self, *args):
         """
