@@ -3,12 +3,14 @@ import maya.OpenMaya as om
 from functools import partial
 import general_checks as gc
 import naming_checks as nc
+import model_checks as mc
 from importlib import reload
 import json
 import os
 import webbrowser
 reload(gc)
 reload(nc)
+reload(mc)
 
 class ModelCheckerUI():
     """
@@ -40,7 +42,7 @@ class ModelCheckerUI():
                         else:
                             continue
                     
-            print(select_items)
+
             cmds.select(select_items, add=True)
             om.MGlobal.displayInfo("Errors selected")
         else:
@@ -83,16 +85,7 @@ class ModelCheckerUI():
             Args: The arguments passed to the function by the UI
         """
 
-        if cmds.ls(sl=True): # Check if there is a selection
-            sel = cmds.ls(sl=True)
-            textures = cmds.ls(sl=True)
-            shaders = cmds.ls(sl=True)
-            om.MGlobal.displayInfo("Running checkers on selected objects")
-        else: # If there is no selection, check all the objects
-            sel = cmds.ls(type='transform')
-            textures = cmds.ls(type='file')
-            shaders = cmds.ls(type='shadingEngine')
-            om.MGlobal.displayInfo("Running checkers on all objects")
+
 
         # Get the checkboxes values
         empyt_checks = cmds.checkBoxGrp(self.general_checks_checkbox, query=True, value1=True)
@@ -100,6 +93,19 @@ class ModelCheckerUI():
         unnused_sh_checks = cmds.checkBoxGrp(self.general_checks_checkbox, query=True, value3=True)
         unnused_tx_checks = cmds.checkBoxGrp(self.general_checks_checkbox, query=True, value4=True)
 
+        if empyt_checks or history_checks or unnused_sh_checks or unnused_tx_checks:
+            if cmds.ls(sl=True): # Check if there is a selection
+                sel = cmds.ls(sl=True)
+                textures = cmds.ls(sl=True)
+                shaders = cmds.ls(sl=True)
+                om.MGlobal.displayInfo("Running checkers on selected objects")
+            else: # If there is no selection, check all the objects
+                sel = cmds.ls(type='transform')
+                textures = cmds.ls(type='file')
+                shaders = cmds.ls(type='shadingEngine')
+                om.MGlobal.displayInfo("Running checkers on all objects")
+        else:
+            return
         # Run the checks
         if empyt_checks:
             result = gc.check_empty_groups(sel) # Call the function to check for empty groups
@@ -149,20 +155,26 @@ class ModelCheckerUI():
 
        
 
-        if cmds.ls(sl=True): # Check if there is a selection
-            sel = cmds.ls(sl=True)
-            pasted_sel = cmds.ls(sl=True)
-            om.MGlobal.displayInfo("Running checkers on selected objects")
-        else: # If there is no selection, check all the objects
-            sel = cmds.ls(type='transform')
-            pasted_sel = cmds.ls(transforms=True, textures=True, shapes=False)
-            om.MGlobal.displayInfo("Running checkers on all objects")
 
         # Get the checkboxes values
         naming_checks = cmds.checkBoxGrp(self.naming_checks_checkbox, query=True, value1=True)
         duplicated_checks = cmds.checkBoxGrp(self.naming_checks_checkbox, query=True, value2=True)
         pasted_checks = cmds.checkBoxGrp(self.naming_checks_checkbox, query=True, value3=True)
         namespace_checks = cmds.checkBoxGrp(self.naming_checks_checkbox, query=True, value4=True)
+
+        if naming_checks or duplicated_checks or pasted_checks or namespace_checks:
+            
+            if cmds.ls(sl=True): # Check if there is a selection
+                sel = cmds.ls(sl=True)
+                pasted_sel = cmds.ls(sl=True)
+                om.MGlobal.displayInfo("Running checkers on selected objects")
+            else: # If there is no selection, check all the objects
+                sel = cmds.ls(type='transform')
+                pasted_sel = cmds.ls(transforms=True, textures=True, shapes=False)
+                om.MGlobal.displayInfo("Running checkers on all objects")
+        
+        else:
+            return
 
         # Run the checks
 
@@ -198,6 +210,78 @@ class ModelCheckerUI():
             else:
                 cmds.textScrollList(self.text_scroll_list, edit=True, append=["No nodes with namespace found"], font="boldLabelFont")
 
+    def model_module_caller(self):
+        """
+        Call the module that contains the model checker functions
+
+        Args:
+            self: The class instance
+            Args: The arguments passed to the function by the UI
+        """
+
+
+        
+        # Get the checkboxes values
+        object_freezed_checks = cmds.checkBoxGrp(self.model_checks_01_checkbox, query=True, value1=True)
+        pivots_checks = cmds.checkBoxGrp(self.model_checks_01_checkbox, query=True, value2=True)
+        ngons_checks = cmds.checkBoxGrp(self.model_checks_01_checkbox, query=True, value3=True)
+        non_manifold_checks = cmds.checkBoxGrp(self.model_checks_01_checkbox, query=True, value4=True)
+
+        if object_freezed_checks or pivots_checks or ngons_checks or non_manifold_checks:
+            if cmds.ls(sl=True):
+                sel = cmds.ls(sl=True)
+                om.MGlobal.displayInfo("Running checkers on selected objects")
+            else:
+                sel = cmds.ls(type='transform')
+                om.MGlobal.displayInfo("Running checkers on all objects")
+        else:
+            return
+
+
+        print(object_freezed_checks, pivots_checks, ngons_checks, non_manifold_checks)
+        # Run the checks
+        if object_freezed_checks:
+            result = mc.check_object_unfreezed(sel)
+            print(result)
+            if result:
+                text_print  = f"----> {result}"
+                cmds.textScrollList(self.text_scroll_list, edit=True, append=["Next line contains the freezed objects:"], font="boldLabelFont")
+                cmds.textScrollList(self.text_scroll_list, edit=True, append=[text_print])
+            else:
+                cmds.textScrollList(self.text_scroll_list, edit=True, append=["No freezed objects found"], font="boldLabelFont")
+        
+        if pivots_checks:
+            result = mc.check_pivots(sel)
+            print(result)
+            if result:
+                text_print  = f"----> {result}"
+                cmds.textScrollList(self.text_scroll_list, edit=True, append=["Next line contains the objects with non-centered pivots:"], font="boldLabelFont")
+                cmds.textScrollList(self.text_scroll_list, edit=True, append=[text_print])
+            else:
+                cmds.textScrollList(self.text_scroll_list, edit=True, append=["No objects with non-centered pivots found"], font="boldLabelFont")
+        
+        if ngons_checks:
+            result = mc.check_ngons(sel)
+            print(result)
+            if result:
+                text_print  = f"----> {result}"
+                cmds.textScrollList(self.text_scroll_list, edit=True, append=["Next line contains the objects with n-gons:"], font="boldLabelFont")
+                cmds.textScrollList(self.text_scroll_list, edit=True, append=[text_print])
+            else:
+                cmds.textScrollList(self.text_scroll_list, edit=True, append=["No objects with n-gons found"], font="boldLabelFont")
+        
+        if non_manifold_checks:
+            result = mc.check_non_manifold(sel)
+            print(result)
+            if result:
+                text_print  = f"----> {result}"
+                cmds.textScrollList(self.text_scroll_list, edit=True, append=["Next line contains the objects with non-manifold geometry:"], font="boldLabelFont")
+                cmds.textScrollList(self.text_scroll_list, edit=True, append=[text_print])
+            else:
+                cmds.textScrollList(self.text_scroll_list, edit=True, append=["No objects with non-manifold geometry found"], font="boldLabelFont")
+
+                                                                              
+
     def query_console(self, *args):
         """
         Query the console output
@@ -228,6 +312,8 @@ class ModelCheckerUI():
 
         self.naming_module_caller()
 
+        self.model_module_caller()
+
     def clear_console(self, *args):
         """
         Clear the console output
@@ -256,7 +342,6 @@ class ModelCheckerUI():
 
         cmds.checkBoxGrp(self.model_checks_01_checkbox, edit=True, valueArray4=[True, True, True, True])
 
-        cmds.checkBoxGrp(self.model_checks_02_checkbox, edit=True, valueArray3=[True, True, True])
 
     def uncheck_all_action(self, *args):
         """
@@ -274,7 +359,6 @@ class ModelCheckerUI():
 
         cmds.checkBoxGrp(self.model_checks_01_checkbox, edit=True, valueArray4=[False, False, False, False])
 
-        cmds.checkBoxGrp(self.model_checks_02_checkbox, edit=True, valueArray3=[False, False, False])
 
     def model_checker_tab_ui(self):
         """
@@ -296,16 +380,16 @@ class ModelCheckerUI():
         # Create the frame for general checks
         general_frame = cmds.frameLayout(label="General", collapsable=True, parent=self.checker_tab, statusBarMessage="Get the options for general checks")
 
-        form_layout = cmds.formLayout(parent=general_frame)
+        general_form_layout = cmds.formLayout(parent=general_frame)
         # Create the checkboxes for the general checks
         self.general_checks_checkbox = cmds.checkBoxGrp(numberOfCheckBoxes=4, 
                                                 labelArray4=["Check Empty Group", "Check Node History", "Check Unused Shader", "Check Unused Texture"], 
-                                                parent=form_layout, 
+                                                parent=general_form_layout, 
                                                 columnAlign=(1, 'left'), 
                                                 vertical=True,
                                                 columnWidth=[(1, 200)])
         
-        cmds.formLayout(form_layout, edit=True, attachForm=[(self.general_checks_checkbox, 'left', 20), (self.general_checks_checkbox, 'top', 5)])
+        cmds.formLayout(general_form_layout, edit=True, attachForm=[(self.general_checks_checkbox, 'left', 20), (self.general_checks_checkbox, 'top', 5)])
 
         cmds.separator(parent=self.checker_tab, style='none', height=10)          
 
@@ -313,43 +397,33 @@ class ModelCheckerUI():
         # Create the frame for naming checks
         naming_frame = cmds.frameLayout(label="Naming", collapsable=True, parent=self.checker_tab, statusBarMessage="Get the options for naming checks")
 
-        form_layout = cmds.formLayout(parent=naming_frame)
+        naming_form_layout = cmds.formLayout(parent=naming_frame)
         # Create the checkboxes for the naming checks
         self.naming_checks_checkbox = cmds.checkBoxGrp(numberOfCheckBoxes=4, 
                                                 labelArray4=["Check Namings", "Check Duplicated Names", "Check Pasted Nodes", "Check Namespace"], 
-                                                parent=form_layout, 
+                                                parent=naming_form_layout, 
                                                 columnAlign=(1, 'left'), 
                                                 vertical=True,
                                                 columnWidth=[(1, 200)])
         
-        cmds.formLayout(form_layout, edit=True, attachForm=[(self.naming_checks_checkbox, 'left', 20), (self.naming_checks_checkbox, 'top', 5)])
+        cmds.formLayout(naming_form_layout, edit=True, attachForm=[(self.naming_checks_checkbox, 'left', 20), (self.naming_checks_checkbox, 'top', 5)])
 
         cmds.separator(parent=self.checker_tab, style='none', height=10)        
 
         # Create the frame for model checks
         model_frame = cmds.frameLayout(label="Model", collapsable=True, parent=self.checker_tab, statusBarMessage="Get the options for model checks")
 
-        form_layout = cmds.formLayout(parent=model_frame)
+        model_form_layout = cmds.formLayout(parent=model_frame)
+
         # Create the checkboxes for the model checks
         self.model_checks_01_checkbox = cmds.checkBoxGrp(numberOfCheckBoxes=4, 
-                                                labelArray4=["Check Object Freezed", "Check Pivots", "Check Cv's Position", "Check N-Gons"], 
-                                                parent=form_layout, 
-                                                columnAlign=(1, 'left'), 
-                                                vertical=True,
-                                                columnWidth=[(1, 200)])
-        
-        self.model_checks_02_checkbox = cmds.checkBoxGrp(numberOfCheckBoxes=3, 
-                                                labelArray3=["Check Triangles", "Check Symmetry", "Check non-manifold geometry"], 
-                                                parent=form_layout, 
+                                                labelArray4=["Check Object Freezed", "Check Pivots", "Check N-Gons", "Check non-manifold geometry"], 
+                                                parent=model_form_layout, 
                                                 columnAlign=(1, 'left'), 
                                                 vertical=True,
                                                 columnWidth=[(1, 200)])
 
-
-
-
-        cmds.formLayout(form_layout, edit=True, attachForm=[(self.model_checks_01_checkbox, 'left', 20), (self.model_checks_01_checkbox, 'top', 5),
-                                                            (self.model_checks_02_checkbox, 'left', 20), (self.model_checks_02_checkbox, 'top', 72),])
+        cmds.formLayout(model_form_layout, edit=True, attachForm=[(self.model_checks_01_checkbox, 'left', 20), (self.model_checks_01_checkbox, 'top', 5)])
 
         cmds.separator(parent=self.checker_tab, style='none', height=10)        
 
@@ -747,12 +821,6 @@ class ModelCheckerUI():
         # Create the main window
         window = cmds.window("modelCheckerUI", title="Model Checker", widthHeight=(300, 200), menuBar=True, resizeToFitChildren=True)
         column_layout = cmds.columnLayout(adjustableColumn=True)
-
-        # cmds.menu( label='File', tearOff=True, parent=window )
-        # loadOption = cmds.menuItem(label="Load user preferences")
-        # saveOption = cmds.menuItem(label="Save user preferences")
-        # saveOption = cmds.menuItem(label="Export model check logs")
-
 
         form_layout = cmds.formLayout(parent=column_layout)    
         text_label = cmds.text(label="Model Checker Tool", parent=form_layout)
