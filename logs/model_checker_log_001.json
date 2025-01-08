@@ -1,0 +1,13 @@
+[
+    "No empty groups found",
+    "No nodes with history found",
+    "Next line contains the unnused shaders:",
+    "----> ['initialParticleSE', 'initialShadingGroup']",
+    "All names seems correct",
+    "No pasted nodes found",
+    "No nodes with namespace found",
+    "Next line contains the freezed objects:",
+    "----> ['front', 'persp', 'persp', 'side', 'side', 'top', 'top']",
+    "Next line contains the objects with non-centered pivots:",
+    "----> ['front', 'persp', 'side', 'top']"
+]
