@@ -1,6 +1,8 @@
 import maya.cmds as cmds
 import maya.OpenMaya as om
 
+print("model_checks module loaded")
+
 def check_object_unfreezed(sel):
     """
     Check for freezed objects in the scene
@@ -28,6 +30,9 @@ def check_object_unfreezed(sel):
 
     if unfreezed_objects:
         return unfreezed_objects
+    else:
+        return None
+
     
 def check_pivots(sel):
     """
@@ -38,13 +43,14 @@ def check_pivots(sel):
     non_centered_pivots = []
     for obj in sel:
         pivot = cmds.xform(obj, q=True, worldSpace=True, piv=True)
-        print(pivot)
         if pivot != [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]:
             non_centered_pivots.append(obj)
         else:
             continue
     if non_centered_pivots:
         return non_centered_pivots
+    else: 
+        return None
 
 def check_ngons(sel):
     """
@@ -64,27 +70,6 @@ def check_ngons(sel):
                 continue
     if ngons:
         return ngons
-    
-def check_tris(sel):
-    """
-    Check for tris in the scene
-
-    Args:
-    """
-    tris = []
-    for obj in sel:
-        faces = cmds.polyEvaluate(obj, triangle=True)
-        print(faces)
-        # for i in range(faces):
-        #     vertices = cmds.polyInfo(f"{obj}.f[{i}]", faceToVertex=True)
-        #     vertices = vertices[0].split("    ")
-        #     print(vertices)
-        #     if len(vertices) == 4:
-        #         tris.append(f"{obj}.f[{i}]")
-        #     else:
-        #         continue
-    if tris:
-        return tris
 
 def check_non_manifold(sel):
     """
@@ -105,28 +90,3 @@ def check_non_manifold(sel):
     else:
         return None    
 
-def check_zero_cv_positions(sel):
-    """
-    Check for zero cv positions in the scene
-
-    Args:
-    """
-
-
-    zero_cv_positions = []
-    for obj in sel:
-        cv_positions = cmds.ls(f"{obj}.pnts[*].pntx" , fl=True)
-        for cv in cv_positions:
-            position = cmds.pointPosition(cv, w=True)
-            if position == [0.0, 0.0, 0.0]:
-                zero_cv_positions.append(cv)
-            else:
-                continue
-    if zero_cv_positions:
-        return zero_cv_positions
-    else:
-        return None
-
-
-sel = cmds.ls(sl=True)
-print(check_non_manifold(sel))
