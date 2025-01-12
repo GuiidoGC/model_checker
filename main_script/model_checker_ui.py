@@ -471,6 +471,9 @@ class ModelCheckerUI():
             
         else:
             file_path = cmds.fileDialog2(fileFilter="JSON Files (*.json)", dialogStyle=2, fileMode=0)[0]
+            if not file_path:
+                om.MGlobal.displayError("Export cancelled")
+                return
 
         if file_path:
             try:
@@ -637,6 +640,8 @@ class ModelCheckerUI():
 
         # Open a file dialog
         self.json_path = cmds.fileDialog2(fileFilter="JSON Files (*.json)", dialogStyle=2, fileMode=1)
+        if not self.json_path:
+            om.MGlobal.displayError("No file selected")
 
         if self.json_path:
             cmds.textField(self.text_field, edit=True, text=self.json_path[0])
