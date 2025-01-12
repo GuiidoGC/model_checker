@@ -1,6 +1,6 @@
 import maya.cmds as cmds
 import maya.OpenMaya as om
-print("Imported general_checks")
+
 
 def check_empty_groups(selection):
     """

@@ -1,8 +1,6 @@
 import maya.cmds as cmds
 import maya.OpenMaya as om
 
-print("model_checks module loaded")
-
 def check_object_unfreezed(sel):
     """
     Check for freezed objects in the scene

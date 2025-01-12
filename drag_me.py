@@ -17,26 +17,21 @@ def onMayaDroppedPythonFile(*args):
     """
     error_find, path = findScriptPath()
     if error_find == "Error":
-        print("Error Find Script Path")
         progress_bar("Error")
         return
     error_maya, scripts_path, scripts_folder = findMayaScriptPath()
     if error_maya == "Error":
-        print("Error Find Maya Script Path")
         progress_bar("Error")
         return
     error_move, result = moveScriptToPath(path, scripts_path)
     if error_move == "Error":
-        print("Error Move Script To Path")
         progress_bar("Error")
         return
     error_user = update_user_setup(scripts_folder)
     if error_user == "Error":
-        print("Error User Setup")
         progress_bar("Error")
         return
     add_script_to_shelf()
-    print(error_find, error_maya, error_move, error_user)
     if error_find == "Error" or error_maya == "Error" or error_move == "Error" or error_user == "Error":
         progress_bar("Error")
     else:

@@ -1,8 +1,6 @@
 import maya.cmds as cmds
 import maya.OpenMaya as om
 
-print("Imported naming_checks")
-
 def check_naming_structure(items, export_data):
     """
     Check for naming structure in the scene
@@ -61,7 +59,6 @@ def check_naming_structure(items, export_data):
 
         
         if side_index:
-            print("Side index")
             pos = cmds.xform(obj, q=True, worldSpace=True, translation=True)
             side = center_side if pos[0] == 0 else (right_side if pos[0] > 0 else left_side)
             
@@ -70,7 +67,6 @@ def check_naming_structure(items, export_data):
                 continue
 
         if type_index:
-            print("Prefix index")
             obj_type = cmds.objectType(obj)
             if obj_type == "transform":
                 if not  transforms_type in name[type_index-1]:
