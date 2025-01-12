@@ -31,12 +31,12 @@ class ModelCheckerUI():
         if query:
             select_items = []
             for index, item in enumerate(query):
-                if index % 2 != 0 and index != 0:
+                if index % 2 != 0 and index != 0: # Check if the index is odd
                     
                     item = item.split("----> ")[1]
                     item = item.split(",")
                     for i in item:
-                        renamed = i.replace("['", "").replace("']", "").replace("'", "")
+                        renamed = i.replace("['", "").replace("']", "").replace("'", "") # Rename the item
                         if renamed not in select_items:
                             select_items.append(renamed)
                         else:
@@ -44,9 +44,9 @@ class ModelCheckerUI():
                     
 
             cmds.select(select_items, add=True)
-            om.MGlobal.displayInfo("Errors selected")
+            om.MGlobal.displayInfo("Errors selected") # Display the info message
         else:
-            om.MGlobal.displayError("No errors to select")
+            om.MGlobal.displayError("No errors to select") # Display the error message
 
     def export_log(self, *args):
         """
@@ -58,23 +58,23 @@ class ModelCheckerUI():
         """
 
         # Export the log file
-        query = cmds.textScrollList(self.text_scroll_list, query=True, allItems=True)
+        query = cmds.textScrollList(self.text_scroll_list, query=True, allItems=True) # Query the console output
 
         if query:
             log_dir = os.path.join(self.default_path, "logs")
-            base_file_path = os.path.join(self.default_path, "logs/model_checker_log_001.json")
+            base_file_path = os.path.join(self.default_path, "logs/model_checker_log_001.json") # Set the base file path
             counter = 1
-            while os.path.exists(base_file_path):
-                base_file_path = os.path.join(log_dir, f"model_checker_log_{str(counter).zfill(2)}.json")
+            while os.path.exists(base_file_path): # Check if the file exists
+                base_file_path = os.path.join(log_dir, f"model_checker_log_{str(counter).zfill(2)}.json") # Set the file path
                 counter += 1
             file_path = base_file_path
 
-            with open(file_path, 'w') as json_file:
+            with open(file_path, 'w') as json_file: # Open the JSON file
                 json.dump(query, json_file, indent=4)
 
-            om.MGlobal.displayInfo(f"Exported log to {file_path}")
+            om.MGlobal.displayInfo(f"Exported log to {file_path}") # Display the info message
         else:
-            om.MGlobal.displayError("No log to export")
+            om.MGlobal.displayError("No log to export") # Display the error message
        
     def general_module_caller(self):
         """
@@ -82,7 +82,6 @@ class ModelCheckerUI():
 
         Args:
             self: The class instance
-            Args: The arguments passed to the function by the UI
         """
 
 
@@ -151,6 +150,13 @@ class ModelCheckerUI():
                 om.MGlobal.displayError("No textures found")
 
     def naming_module_caller(self):
+        """
+        Call the module that contains the naming checks functions
+
+        Args:
+            self: The class instance
+        """
+
         export_data = self.get_query_export_tab()
 
        
@@ -222,7 +228,6 @@ class ModelCheckerUI():
 
         Args:
             self: The class instance
-            Args: The arguments passed to the function by the UI
         """
 
 
@@ -248,8 +253,8 @@ class ModelCheckerUI():
             result = mc.check_object_unfreezed(sel)
             if result:
                 text_print  = f"----> {result}"
-                cmds.textScrollList(self.text_scroll_list, edit=True, append=["Next line contains the freezed objects:"], font="boldLabelFont")
-                cmds.textScrollList(self.text_scroll_list, edit=True, append=[text_print])
+                cmds.textScrollList(self.text_scroll_list, edit=True, append=["Next line contains the freezed objects:"], font="boldLabelFont") # Add the text to the console
+                cmds.textScrollList(self.text_scroll_list, edit=True, append=[text_print]) 
             else:
                 cmds.textScrollList(self.text_scroll_list, edit=True, append=["No freezed objects found"], font="boldLabelFont")
         
@@ -257,7 +262,7 @@ class ModelCheckerUI():
             result = mc.check_pivots(sel)
             if result:
                 text_print  = f"----> {result}"
-                cmds.textScrollList(self.text_scroll_list, edit=True, append=["Next line contains the objects with non-centered pivots:"], font="boldLabelFont")
+                cmds.textScrollList(self.text_scroll_list, edit=True, append=["Next line contains the objects with non-centered pivots:"], font="boldLabelFont") # Add the text to the console
                 cmds.textScrollList(self.text_scroll_list, edit=True, append=[text_print])
             else:
                 cmds.textScrollList(self.text_scroll_list, edit=True, append=["No objects with non-centered pivots found"], font="boldLabelFont")
@@ -266,7 +271,7 @@ class ModelCheckerUI():
             result = mc.check_ngons(sel)
             if result:
                 text_print  = f"----> {result}"
-                cmds.textScrollList(self.text_scroll_list, edit=True, append=["Next line contains the objects with n-gons:"], font="boldLabelFont")
+                cmds.textScrollList(self.text_scroll_list, edit=True, append=["Next line contains the objects with n-gons:"], font="boldLabelFont") # Add the text to the console
                 cmds.textScrollList(self.text_scroll_list, edit=True, append=[text_print])
             else:
                 cmds.textScrollList(self.text_scroll_list, edit=True, append=["No objects with n-gons found"], font="boldLabelFont")
@@ -275,25 +280,12 @@ class ModelCheckerUI():
             result = mc.check_non_manifold(sel)
             if result:
                 text_print  = f"----> {result}"
-                cmds.textScrollList(self.text_scroll_list, edit=True, append=["Next line contains the objects with non-manifold geometry:"], font="boldLabelFont")
+                cmds.textScrollList(self.text_scroll_list, edit=True, append=["Next line contains the objects with non-manifold geometry:"], font="boldLabelFont") # Add the text to the console
                 cmds.textScrollList(self.text_scroll_list, edit=True, append=[text_print])
             else:
                 cmds.textScrollList(self.text_scroll_list, edit=True, append=["No objects with non-manifold geometry found"], font="boldLabelFont")
 
                                                                               
-
-    def query_console(self, *args):
-        """
-        Query the console output
-
-        Args:
-            self: The class instance
-            Args: The arguments passed to the function by the UI
-        """
-
-        # Query the console output
-        console_output = cmds.textScrollList(self.text_scroll_list, query=True, allItems=True)
-
     def module_caller(self, *args):
         """
         Call the module that contains the model checker functions
@@ -426,7 +418,7 @@ class ModelCheckerUI():
 
         cmds.separator(parent=self.checker_tab, style='none', height=10)        
 
-
+        # Create the frame for the output console
         output_console_label = cmds.text(label="OUTPUT CONSOLE", parent=self.checker_tab, font="boldLabelFont", height=30)
 
         # Create console output
@@ -489,7 +481,7 @@ class ModelCheckerUI():
                 om.MGlobal.displayInfo(f"Exported configuration to {file_path}")
             except PermissionError:
                 om.MGlobal.displayError(f"Permission denied: {file_path}")
-                new_file_path = cmds.fileDialog2(fileFilter="JSON Files (*.json)", dialogStyle=2, fileMode=0)[0]
+                new_file_path = cmds.fileDialog2(fileFilter="JSON Files (*.json)", dialogStyle=2, fileMode=0)[0] # Open the file dialog
                 if new_file_path:
                     with open(new_file_path, 'w') as json_file:
                         json.dump(export_data, json_file, indent=4)
@@ -506,6 +498,7 @@ class ModelCheckerUI():
         Args:
             self: The class instance
         """
+        # Get the query from the export tab
         transforms_type_suffix = cmds.optionMenuGrp(self.transforms_option_menu, query=True, value=True)
         meshes_type_suffix = cmds.optionMenuGrp(self.meshes_option_menu, query=True, value=True)
         joints_type_suffix = cmds.optionMenuGrp(self.joints_option_menu, query=True, value=True)
@@ -533,8 +526,9 @@ class ModelCheckerUI():
             else:
                 side_count += 1
 
-        naming_convention = cmds.textField(self.naming_text_field, query=True, text=True)
+        naming_convention = cmds.textField(self.naming_text_field, query=True, text=True) # Get the naming convention
 
+        # Split the naming convention
         if naming_convention:
             splited_naming_convention = naming_convention.split("_")
             parts_splited = []
@@ -557,6 +551,7 @@ class ModelCheckerUI():
             om.MGlobal.displayError("No naming convention set")
             return
 
+        # Create the export data
         if parts_splited and type_suffix_count == 6 and side_count == 3:
             export_data = {
                 "type_suffix": { "Transforms": transforms_type_suffix, "Meshes": meshes_type_suffix, "Joints": joints_type_suffix, "Locators": locators_type_suffix, "Clusters": clusters_type_suffix, "Lights": lights_type_suffix },
@@ -580,9 +575,11 @@ class ModelCheckerUI():
         if text_query:
             self.custom_config = text_query
 
+            # Open the JSON file
             with open(self.custom_config, 'r') as json_file:
                 config_data = json.load(json_file)
 
+            # Set the values from the JSON file
             for key, value in config_data.items():
                 if key == "type_suffix":
                     for key, value in value.items():
@@ -645,7 +642,16 @@ class ModelCheckerUI():
             cmds.textField(self.text_field, edit=True, text=self.json_path[0])
 
     def insert_keyword(self, keyword, naming_text_field, *args):
-        """Insert the selected keyword into the text field."""
+        """
+        Insert the selected keyword into the text field.
+        
+        Args:
+            self: The class instance
+            keyword: The keyword to insert
+            naming_text_field: The text field to insert the keyword
+            Args: The arguments passed to the function by the UI
+        """
+
         # Get the current text from the text field
         current_text = cmds.textField(naming_text_field, query=True, text=True)
         
@@ -661,6 +667,7 @@ class ModelCheckerUI():
             self: The class instance
         """
 
+        # Create the export tab
         self.export_tab = cmds.columnLayout(adjustableColumn=True, parent=self.tabs)
 
         cmds.separator(parent=self.export_tab, style='none', height=10)
@@ -669,13 +676,15 @@ class ModelCheckerUI():
 
         cmds.separator(parent=self.export_tab, style='none', height=10)
 
+        # Create the frame for the naming convention
         path_form_layout = cmds.formLayout(parent=self.export_tab)   
 
-
+        # Create the text field for the naming convention
         list_json_files = cmds.getFileList(folder=os.path.join(self.default_path, "json_data"), filespec="*.json")
         list_json_files.sort(reverse=True)
         highest_json = os.path.join(self.default_path, "json_data", list_json_files[0])
 
+        # Create the text field for the path
         folder_button = cmds.iconTextButton("folder_button", st="iconOnly", h=20, backgroundColor=(0.3, 0.3, 0.3), image=":/folder-open.png", ebg=True, parent = path_form_layout)
         self.text_field = cmds.textField("text_field",text=highest_json, h=20, w=500, bgc=(0.3, 0.3, 0.3), parent = path_form_layout, )
         load_button = cmds.button("load_button", label="Load Config", parent=path_form_layout, command=self.load_config)
@@ -689,6 +698,7 @@ class ModelCheckerUI():
 
         cmds.separator(parent=self.export_tab, style='none', height=10)
 
+        # Create the frame for the naming convention
         cmds.text(label="NAMING CONVENTION CONFIG", parent=self.export_tab, font="boldLabelFont")
 
         cmds.separator(parent=self.export_tab, style='none', height=10)
@@ -755,6 +765,8 @@ class ModelCheckerUI():
         cmds.menuItem(label="Right")
         cmds.menuItem(label="right")
 
+
+        # Attach the form layout
         cmds.formLayout(type_suffix_form_layout, edit=True, attachForm=[
             (self.transforms_option_menu, 'left', 50), (self.transforms_option_menu, 'top', 25),
             (self.meshes_option_menu, 'left', 50), (self.meshes_option_menu, 'top', 55),
@@ -784,18 +796,21 @@ class ModelCheckerUI():
         for keyword in keywords:
             cmds.menuItem(label=keyword, command=partial(self.insert_keyword, keyword, self.naming_text_field))
 
+        # Attach the form layout
         cmds.formLayout(naming_form_layout, edit=True, attachForm=[
             (naming_text, 'left', 50), (naming_text, 'top', 5),
             (self.naming_text_field, 'left', 175), (self.naming_text_field, 'top', 5),
             (self.naming_text_field, 'right', 50)
         ])     
 
+        # Create the separator
         cmds.separator(parent=self.export_tab, style='none', height=10)
 
         export_form_layout = cmds.formLayout(parent=self.export_tab)
         self.export_checkBox = cmds.radioButtonGrp(numberOfRadioButtons=2, labelArray2=["Default Path", "Custom Path"], parent=export_form_layout, columnAlign=(1, 'left'), select=1, vertical=True)
         export_button = cmds.button(label="Export JSON", parent=export_form_layout, command=self.export_json_button)
 
+        # Attach the form layout
         cmds.formLayout(export_form_layout, edit=True, attachForm=[
             (self.export_checkBox, 'left', 50), (self.export_checkBox, 'top', 5),
             (export_button, 'left', 250), (export_button, 'top', 10),
