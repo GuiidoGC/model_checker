@@ -59,10 +59,12 @@ def update_user_setup(scripts_path):
 import maya.cmds as cmds
 import maya.utils as utils
 import maya.OpenMaya as om
+from importlib import reload
 
 def launch_model_checker(*args):
     try:
         import model_checker
+        reload(model_checker)
     except ImportError:
         om.MGlobal.displayError("Module not found")
         return
