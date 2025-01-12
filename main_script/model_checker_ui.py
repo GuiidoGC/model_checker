@@ -190,6 +190,12 @@ class ModelCheckerUI():
             
         if duplicated_checks:
             result = nc.duplicated_names(sel)
+            if result:
+                text_print  = f"----> {result}"
+                cmds.textScrollList(self.text_scroll_list, edit=True, append=["Next line contains the duplicated names:"], font="boldLabelFont") # Add the text to the console
+                cmds.textScrollList(self.text_scroll_list, edit=True, append=[text_print])
+            else:
+                cmds.textScrollList(self.text_scroll_list, edit=True, append=["No duplicated names found"], font="boldLabelFont")
            
 
         if pasted_checks:

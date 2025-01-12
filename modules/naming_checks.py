@@ -69,9 +69,33 @@ def check_naming_structure(items, export_data):
         if type_index:
             obj_type = cmds.objectType(obj)
             if obj_type == "transform":
-                if not  transforms_type in name[type_index-1]:
-                    bad_names.append(obj)
-                    continue
+                if cmds.listRelatives(obj, shapes=True):
+                    shape = cmds.listRelatives(obj, shapes=True)[0]
+                    shape_type = cmds.objectType(shape)
+                    if shape_type == "mesh":
+                        if not meshes_type in name[type_index-1]:
+                            bad_names.append(obj)
+                            continue
+                    elif shape_type == "joint":
+                        if not joints_type in name[type_index-1]:
+                            bad_names.append(obj)
+                            continue
+                    elif shape_type == "locator":
+                        if not locators_type in name[type_index-1]:
+                            bad_names.append(obj)
+                            continue
+                    elif shape_type == "clusterHandle":
+                        if not clusters_type in name[type_index-1]:
+                            bad_names.append(obj)
+                            continue
+                    elif shape_type == "aiAreaLight":
+                        if not lights_type in name[type_index-1]:
+                            bad_names.append(obj)
+                            continue
+                else:
+                    if not  transforms_type in name[type_index-1]:
+                        bad_names.append(obj)
+                        continue
             elif obj_type == "mesh":
                 if not meshes_type in name[type_index-1]:
                     bad_names.append(obj)
@@ -84,15 +108,16 @@ def check_naming_structure(items, export_data):
                 if not locators_type in name[type_index-1]:
                     bad_names.append(obj)
                     continue
-            elif obj_type == "cluster":
+            elif obj_type == "clusterHandle":
                 if not clusters_type in name[type_index-1]:
                     bad_names.append(obj)
                     continue
-            elif obj_type == "light":
+            elif obj_type == "aiAreaLight":
                 if not lights_type in name[type_index-1]:
                     bad_names.append(obj)
                     continue
-    
+    bad_names = list(set(bad_names))
+
     return bad_names
 
 def duplicated_names(items):

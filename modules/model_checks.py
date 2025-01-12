@@ -59,15 +59,18 @@ def check_ngons(sel):
     ngons = []
     for obj in sel:
         relative = cmds.listRelatives(obj, shapes=True)
-        if cmds.objectType(relative) == "mesh":
-            faces = cmds.polyEvaluate(obj, face=True)
-            for i in range(faces):
-                vertices = cmds.polyInfo(f"{obj}.f[{i}]", faceToVertex=True)
-                vertices = vertices[0].split()
-                if len(vertices) > 6:
-                    ngons.append(f"{obj}.f[{i}]")
-                else:
-                    continue
+        if relative:
+            if cmds.objectType(relative) == "mesh":
+                faces = cmds.polyEvaluate(obj, face=True)
+                for i in range(faces):
+                    vertices = cmds.polyInfo(f"{obj}.f[{i}]", faceToVertex=True)
+                    vertices = vertices[0].split()
+                    if len(vertices) > 6:
+                        ngons.append(f"{obj}.f[{i}]")
+                    else:
+                        continue
+        else:
+            continue
     if ngons:
         return ngons
 
