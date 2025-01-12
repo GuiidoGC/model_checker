@@ -47,6 +47,7 @@ def update_user_setup(scripts_path):
     
     code_to_add = """
 import maya.cmds as cmds
+from functools import partial
 print("Dentro")
 if cmds.menu("ModelChecker", exists=True):
     cmds.deleteUI("ModelChecker")
