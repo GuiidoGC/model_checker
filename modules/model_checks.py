@@ -58,7 +58,8 @@ def check_ngons(sel):
     """
     ngons = []
     for obj in sel:
-        if cmds.nodeType(obj) == "mesh":
+        relative = cmds.listRelatives(obj, shapes=True)
+        if cmds.objectType(relative) == "mesh":
             faces = cmds.polyEvaluate(obj, face=True)
             for i in range(faces):
                 vertices = cmds.polyInfo(f"{obj}.f[{i}]", faceToVertex=True)
