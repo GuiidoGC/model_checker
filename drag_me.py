@@ -47,14 +47,28 @@ def update_user_setup(scripts_path):
     
     code_to_add = """
 import maya.cmds as cmds
-from functools import partial
-print("Dentro")
-if cmds.menu("ModelChecker", exists=True):
-    cmds.deleteUI("ModelChecker")
+import maya.utils as utils
+import maya.OpenMaya as om
 
-cmds.menu("ModelChecker", label="Model Checker", parent="MayaWindow")
-cmds.menuItem(label="Model Checker", command=partial(import model_checker))
+def launch_model_checker(*args):
+    try:
+        import model_checker
+    except ImportError:
+        om.MGlobal.displayError("Module not found")
+        return
 
+def create_menu():
+    if not cmds.window("MayaWindow", exists=True):
+        utils.executeDeferred(create_menu)
+        return
+
+    if cmds.menu("ModelChecker", exists=True):
+        cmds.deleteUI("ModelChecker")
+
+    cmds.menu("ModelChecker", label="Model Checker", parent="MayaWindow")
+    cmds.menuItem(label="Model Checker UI", command=launch_model_checker)
+
+utils.executeDeferred(create_menu)
 """
 
     files = os.listdir(scripts_path)
